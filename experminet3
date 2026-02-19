@@ -1,0 +1,115 @@
+# 1. Reverse an Array
+def reverse_array(arr):
+    # Modifying the array in-place using two pointers
+    left, right = 0, len(arr) - 1
+    while left < right:
+        arr[left], arr[right] = arr[right], arr[left]
+        left += 1
+        right -= 1
+    return arr
+
+# 2. Find minimum and maximum element in an array
+def find_min_max(arr):
+    if not arr:
+        return []
+    # Using built-in functions for simplicity
+    return [min(arr), max(arr)]
+
+# 3. Kth smallest element
+def kth_smallest(arr, k):
+    # Sorting the array to find the kth element easily
+    arr.sort()
+    return arr[k - 1]
+
+# 4. Union of Two Arrays
+def union_of_arrays(a, b):
+    # Using a Set to automatically handle distinct elements
+    union_set = set(a).union(set(b))
+    return list(union_set)
+
+# 5. Largest Element in Array
+def largest_element(arr):
+    if not arr:
+        return -1
+    max_element = arr[0]
+    for num in arr:
+        if num > max_element:
+            max_element = num
+    return max_element
+
+# 6. Cyclically rotate an array by one
+def rotate_by_one(arr):
+    if len(arr) > 1:
+        # Remove the last element and insert it at the 0th index
+        last_element = arr.pop()
+        arr.insert(0, last_element)
+    return arr
+
+# 7. Maximum sum of a subarray (Kadane's Algorithm)
+def max_subarray_sum(arr):
+    max_so_far = float('-inf')
+    current_max = 0
+    
+    for num in arr:
+        current_max += num
+        if current_max > max_so_far:
+            max_so_far = current_max
+        if current_max < 0:
+            current_max = 0
+            
+    return max_so_far
+
+# 8. Search Insert Position (O(log n) complexity)
+def search_insert(nums, target):
+    # Using Binary Search for O(log n) time complexity
+    left, right = 0, len(nums) - 1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            return mid
+        elif nums[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+            
+    # If not found, 'left' will be at the correct insertion index
+    return left
+
+# 9. Two Sum
+def two_sum(nums, target):
+    # Using a dictionary (hash map) to store visited numbers and their indices
+    seen = {}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []
+
+# 10. Minimum number of jumps
+def min_jumps(arr):
+    n = len(arr)
+    if n <= 1:
+        return 0
+    if arr[0] == 0:
+        return -1
+        
+    max_reach = arr[0]
+    steps = arr[0]
+    jumps = 1
+    
+    for i in range(1, n):
+        if i == n - 1:
+            return jumps
+            
+        max_reach = max(max_reach, i + arr[i])
+        steps -= 1
+        
+        if steps == 0:
+            jumps += 1
+            if i >= max_reach:
+                return -1
+            steps = max_reach - i
+            
+    return -1
