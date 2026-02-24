@@ -1,0 +1,201 @@
+import heapq
+import math
+
+class ExperimentSolutions:
+    # 1. Prefix Sum of Matrix (2D Array Sum Query) 
+    def matrix_sum_queries(self, mat, queries):
+        n, m = len(mat), len(mat[0])
+        pref = [[0] * (m + 1) for _ in range(n + 1)]
+        for r in range(n):
+            for c in range(m):
+                pref[r+1][c+1] = mat[r][c] + pref[r][c+1] + pref[r+1][c] - pref[r][c]
+        
+        results = []
+        for q in queries:
+            r1, c1, r2, c2 = q
+            res = pref[r2+1][c2+1] - pref[r1][c2+1] - pref[r2+1][c1] + pref[r1][c1]
+            results.append(res)
+        return results
+
+    # 2. Footpath Construction [cite: 1, 4]
+    def footpath_cost(self, n, m, mat, queries):
+        results = []
+        for R, C in queries:
+            R, C = R-1, C-1  # Convert to 0-indexed
+            sections = [
+                [mat[r][c] for r in range(0, R) for c in range(0, C)],       # Top-Left
+                [mat[r][c] for r in range(0, R) for c in range(C+1, m)],     # Top-Right
+                [mat[r][c] for r in range(R+1, n) for c in range(0, C)],     # Bottom-Left
+                [mat[r][c] for r in range(R+1, n) for c in range(C+1, m)]    # Bottom-Right
+            ]
+            results.append(sum(min(s) for s in sections if s))
+        return results
+
+    # 3. Minimum Operations to Halve Sum [cite: 4, 8]
+    def min_ops_to_halve(self, arr):
+        target = sum(arr) / 2
+        curr_sum = sum(arr)
+        max_heap = [-float(x) for x in arr]
+        heapq.heapify(max_heap)
+        ops = 0
+        while curr_sum > target:
+            val = -heapq.heappop(max_heap)
+            reduced = val / 2
+            curr_sum -= reduced
+            heapq.heappush(max_heap, -reduced)
+            ops += 1
+        return ops
+
+    # 4. Minimum Sprinklers (Working Hour Coverage) 
+    def min_sprinklers(self, arr):
+        n = len(arr)
+        intervals = []
+        for i, val in enumerate(arr):
+            if val != -1:
+                intervals.append((max(0, i - val), min(n - 1, i + val)))
+        intervals.sort()
+        count, i, target = 0, 0, 0
+        while target < n:
+            max_reach = -1
+            while i < len(intervals) and intervals[i][0] <= target:
+                max_reach = max(max_reach, intervals[i][1])
+                i += 1
+            if max_reach == -1 or max_reach < target: return -1
+            count += 1
+            target = max_reach + 1
+        return count
+
+    # 5. Previous Smaller Element (PSE) [cite: 8, 11]
+    def prev_smaller_element(self, arr):
+        stack, res = [], []
+        for x in arr:
+            while stack and stack[-1] >= x: stack.pop()
+            res.append(stack[-1] if stack else -1)
+            stack.append(x)
+        return res
+
+    # 6. Previous Greater Element (PGE) 
+    def prev_greater_element(self, arr):
+        stack, res = [], []
+        for x in arr:
+            while stack and stack[-1] <= x: stack.pop()
+            res.append(stack[-1] if stack else -1)
+            stack.append(x)
+        return res
+
+    # 7. Subarrays with First Element Minimum [cite: 11, 14]
+    def count_min_first_subarrays(self, arr):
+        # A subarray starting at i is valid until an element smaller than arr[i] appears
+        count = 0
+        for i in range(len(arr)):
+            count += 1 # The single element subarray [arr[i]]
+            for j in range(i + 1, len(arr)):
+                if arr[j] >= arr[i]: count += 1
+                else: break
+        return count
+
+    # 8. Find 132 Pattern 
+    def find132pattern(self, arr):
+        stack, s3 = [], -float('inf')
+        for n in reversed(arr):
+            if n < s3: return True
+            while stack and n > stack[-1]:
+                s3 = stack.pop()
+            stack.append(n)
+        return False
+
+    # 9. Maximum People Visible in a Line [cite: 14, 17]
+    def max_visible(self, arr):
+        n = len(arr)
+        visible_counts = [1] * n
+        for i in range(n):
+            # Check Left
+            max_h = -1
+            for j in range(i-1, -1, -1):
+                if arr[j] < arr[i]:
+                    if arr[j] > max_h:
+                        visible_counts[i] += 1
+                        max_h = arr[j]
+                else:
+                    visible_counts[i] += 1
+                    break
+            # Check Right
+            max_h = -1
+            for j in range(i+1, n):
+                if arr[j] < arr[i]:
+                    if arr[j] > max_h:
+                        visible_counts[i] += 1
+                        max_h = arr[j]
+                else:
+                    visible_counts[i] += 1
+                    break
+        return max(visible_counts)
+
+    # 10. Combination Sum III 
+    def combinationSum3(self, k, n):
+        res = []
+        def backtrack(remain, start, path):
+            if len(path) == k:
+                if remain == 0: res.append(list(path))
+                return
+            for i in range(start, 10):
+                if i > remain: break
+                path.append(i)
+                backtrack(remain - i, i + 1, path)
+                path.pop()
+        backtrack(n, 1, [])
+        return res
+
+    # 11. Tug of War (Equal Sum Partition) 
+    def tug_of_war(self, arr):
+        n = len(arr)
+        target_size = n // 2
+        self.min_diff = float('inf')
+        self.ans = []
+        total_sum = sum(arr)
+
+        def solve(idx, curr_sum, count, path):
+            if count == target_size:
+                diff = abs((total_sum - curr_sum) - curr_sum)
+                if diff < self.min_diff:
+                    self.min_diff = diff
+                    other_subset = arr.copy()
+                    for x in path: other_subset.remove(x)
+                    self.ans = [path[:], other_subset]
+                return
+            if idx == n: return
+            path.append(arr[idx])
+            solve(idx + 1, curr_sum + arr[idx], count + 1, path)
+            path.pop()
+            solve(idx + 1, curr_sum, count, path)
+
+        solve(0, 0, 0, [])
+        return self.ans
+
+    # 12. Maximize Minimum Difference between K Elements 
+    def maximize_min_diff(self, arr, k):
+        arr.sort()
+        def can_place(dist):
+            count, last = 1, arr[0]
+            for i in range(1, len(arr)):
+                if arr[i] - last >= dist:
+                    count += 1
+                    last = arr[i]
+            return count >= k
+        
+        low, high, res = 0, arr[-1] - arr[0], 0
+        while low <= high:
+            mid = (low + high) // 2
+            if can_place(mid):
+                res = mid
+                low = mid + 1
+            else: high = mid - 1
+        return res
+
+    # 13. Count Elements <= X in Sorted Rotated Array 
+    def count_less_equal(self, arr, x):
+        return sum(1 for i in arr if i <= x)
+
+    # 14. Add Numbers in Array (Long Long Sum) 
+    def sum_array(self, arr):
+        return sum(arr)
